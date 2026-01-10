@@ -12,12 +12,15 @@ const initSocket = (server) => {
   io = new Server(server, {
     cors: {
         origin: [
-            'http://localhost:3002', // home 
+            'http://localhost:3002', // home
             'http://localhost:3001', // doctor
             'https://homekhambenh.dantri24h.com',
             'https://homekhambenh.dantri24h.com',
             'https://doctorkhambenh.dantri24h.com',
             'https://datlichkhambenh.dokhactu.site',
+            'https://trangchu-coral.vercel.app',
+            'https://trangadmin.vercel.app',
+            'https://trangdoctor.vercel.app'
         ],
       methods: ["GET", "POST"],
       credentials: true,
@@ -44,7 +47,7 @@ const initSocket = (server) => {
           // sender và receiver giờ là object: { id: '...', model: '...' }
           const { id: senderId, model: senderModel } = sender;
           const { id: receiverId, model: receiverModel } = receiver;
-  
+
           const newMessage = new Message({
             conversationId,
             sender: { senderId, senderModel },
@@ -52,7 +55,7 @@ const initSocket = (server) => {
             readBy: [{ readerId: senderId, readerModel: senderModel }],
           });
           await newMessage.save();
-  
+
           await Conversation.findByIdAndUpdate(conversationId, {
               lastMessage: {
                   content,
@@ -62,15 +65,15 @@ const initSocket = (server) => {
               },
               $set: { updatedAt: new Date() } // Cập nhật để sort
           });
-  
+
           // ✅ Sửa cách populate cho Dynamic References
           const populatedMessage = await Message.findById(newMessage._id)
               .populate('sender.senderId', 'firstName lastName image');
-  
+
           // Gửi tin nhắn tới phòng của người nhận và người gửi
           io.to(receiverId).emit("receiveMessage", populatedMessage);
           io.to(senderId).emit("receiveMessage", populatedMessage);
-  
+
         } catch (error) {
           console.error("Lỗi khi gửi tin nhắn:", error);
         }

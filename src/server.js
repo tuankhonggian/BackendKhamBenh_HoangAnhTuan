@@ -45,12 +45,17 @@ connectDB();
 // );
 const allowedOrigins = [
     'http://localhost:3000', // admin
-    'http://localhost:3002', // home 
+    'http://localhost:3002', // home
     'http://localhost:3001', // doctor
     'https://homekhambenh.dantri24h.com',
     'https://adminkhambenh.dantri24h.com',
     'https://doctorkhambenh.dantri24h.com',
     'https://datlichkhambenh.dokhactu.site',
+    'https://trangchu-coral.vercel.app',
+    'https://trangadmin.vercel.app',
+    'https://trangdoctor.vercel.app'
+
+
 ];
 
 app.use(cors({
@@ -89,7 +94,7 @@ app.use('/api/doctor-chat', doctorChatRouter);
 // Hàm cron job xóa lịch quá hạn
 cron.schedule("*/10 * * * * *", async () => {
     try {
-        
+
         // const today = new Date().toLocaleDateString("en-CA");
         const today = moment().tz("Asia/Ho_Chi_Minh")
         const tenGio = today.format("HH:mm")
