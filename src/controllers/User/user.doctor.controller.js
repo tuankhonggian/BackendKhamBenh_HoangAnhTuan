@@ -1420,16 +1420,39 @@ module.exports = {
                 // Tìm các tenGio tương ứng với thoiGianId
                 const timeGioList = await ThoiGianGio.find({ _id: { $in: timeGioIds } });
 
-                // Tạo mảng các tenGio
-                const tenGioArray = timeGioList.map(item => item.tenGio);
-                console.log("tenGioArray: ", tenGioArray);
+                // ✅ Chuyển đổi date về format DD/MM/YYYY để so sánh với ngayKhamBenh trong database
+                const formattedDate = moment(date).format('DD/MM/YYYY');
+                console.log("formattedDate for comparison: ", formattedDate);
 
+                // ✅ Lấy danh sách các lịch khám đã được đặt và thanh toán thành công
+                const bookedAppointments = await KhamBenh.find({
+                    _idDoctor: doctorId,
+                    ngayKhamBenh: formattedDate,
+                    trangThaiThanhToan: true, // ✅ Chỉ lấy các lịch đã thanh toán thành công
+                    trangThaiHuyDon: { $ne: "Đã Hủy" } // ✅ Loại bỏ các lịch đã hủy
+                });
+
+                // ✅ Lấy danh sách các tenGio đã được đặt và thanh toán
+                const bookedTimeSlots = bookedAppointments.map(appointment => appointment.tenGioKham);
+                console.log("bookedTimeSlots (đã thanh toán): ", bookedTimeSlots);
+
+                // ✅ Lọc bỏ các giờ đã được đặt và thanh toán thành công
+                const availableTimeGioList = timeGioList.filter(timeGio => {
+                    return !bookedTimeSlots.includes(timeGio.tenGio);
+                });
+
+                // ✅ Lấy danh sách thoiGianId còn trống
+                const availableTimeGioIds = availableTimeGioList.map(item => item._id);
+
+                // Tạo mảng các tenGio còn trống
+                const tenGioArray = availableTimeGioList.map(item => item.tenGio);
+                console.log("tenGioArray (available - còn trống): ", tenGioArray);
 
                 return res.status(200).json({
                     message: 'Lấy thời gian thành công!',
-                    timeSlots: timeSlot.thoiGianId,
+                    timeSlots: availableTimeGioIds, // ✅ Trả về các giờ còn trống
                     tenGioArray,
-                    timeGioList
+                    timeGioList: availableTimeGioList // ✅ Trả về danh sách giờ còn trống
                 });
             } else {
                 return res.status(200).json({ message: 'Không có thời gian khám cho ngày này!', timeSlots: [] });
